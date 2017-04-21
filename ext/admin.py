@@ -12,7 +12,7 @@ class Admin:
     @commands.command(
         name='invitelink',
         aliases=['invite'],
-        description='Get the invite link for this bot.'
+        description='Get the invite linker for this bot.'
     )
     async def invite_link(self):
         await self.bot.say(INVITE_FORMAT.format(self.bot.config['discord']['client_id']))
