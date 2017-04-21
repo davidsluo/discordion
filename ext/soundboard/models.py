@@ -15,12 +15,10 @@ class ListField(TextField):
         return value
 
 
-class BaseModel(Model):
+class Sound(Model):
     class Meta:
         database = db
 
-
-class Sound(BaseModel):
     name = CharField(unique=True)
     filename = CharField(unique=True)
     volume = IntegerField(default=50)
