@@ -98,3 +98,4 @@ ENV/
 /site
 
 config.yml
+*.db

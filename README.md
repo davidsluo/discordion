@@ -2,6 +2,6 @@
 *A bot for discord*
 
 ## TODO:
-* Redis for storage
+* Sqlite3 database for storage
 * Get running on heroku
 * Actual commands

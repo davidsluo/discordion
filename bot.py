@@ -2,17 +2,23 @@ import logging
 import yaml
 
 from discord.ext.commands import Bot
+from peewee import SqliteDatabase
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+with open('config.yml', 'r') as f:
+    config = yaml.load(f)
+
+bot = Bot(command_prefix="!")
+
+bot.config = config
+
+db = SqliteDatabase('database.db')
+
 if __name__ == '__main__':
-    with open('config.yml', 'r') as f:
-        config = yaml.load(f)
 
-    bot = Bot(command_prefix="!")
-
-    bot.config = config
+    db.connect()
 
     extensions = config['extensions']
 
