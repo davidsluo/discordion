@@ -1,24 +1,9 @@
-import json
+from peewee import CharField, TextField, IntegerField
 
-from peewee import Model, CharField, TextField, IntegerField
-
-from bot import db
+from database.models import ListField, BaseModel
 
 
-class ListField(TextField):
-    def db_value(self, value):
-        return json.dumps(value)
-
-    def python_value(self, value):
-        value = json.loads(value)
-        assert type(value) == list
-        return value
-
-
-class Sound(Model):
-    class Meta:
-        database = db
-
+class Sound(BaseModel):
     name = CharField(unique=True)
     filename = CharField(unique=True)
     volume = IntegerField(default=50)

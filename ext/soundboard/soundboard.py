@@ -7,7 +7,6 @@ from discord import InvalidArgument
 from discord.ext import commands
 from requests import RequestException
 
-from bot import db
 from ext.soundboard.models import Sound
 
 
@@ -22,7 +21,7 @@ class Soundboard:
         except FileExistsError:
             pass
 
-        db.create_tables([Sound], safe=True)
+        Sound.create_table(fail_silently=True)
 
         for sound in Sound.select():
             self._add_sound_to_bot(sound)
@@ -82,9 +81,9 @@ class Soundboard:
             Required
             The name of the command to register the new sound under. Must be one word. Cannot be the same as an already existing command.
             
-            -link (-l)
+            -linker (-l)
             Required
-            The link to the audio file to be played. If not specified, then this command must be called through a comment on a file upload to discord.
+            The linker to the audio file to be played. If not specified, then this command must be called through a comment on a file upload to discord.
             
             -description (-desc, -d)
             Optional
@@ -104,16 +103,16 @@ class Soundboard:
 
         parser = argparse.ArgumentParser(add_help=False)
         parser.add_argument('-name', '-n')
-        parser.add_argument('-link', '-l')
+        parser.add_argument('-linker', '-l')
         parser.add_argument('-description', '-desc', '-d')
         parser.add_argument('-brief', '-b')
         parser.add_argument('-volume', '-v', type=int)
         parser.add_argument('-aliases', '-a', type=list)
         parsed = vars(parser.parse_args(args=args))
 
-        if not parsed['link']:
+        if not parsed['linker']:
             try:
-                parsed['link'] = ctx.message.attachments[0]['url']
+                parsed['linker'] = ctx.message.attachments[0]['url']
             except (IndexError, KeyError):
                 await self.bot.say('Link or upload of sound file required.', delete_after=30)
                 return
@@ -125,9 +124,9 @@ class Soundboard:
         self.bot.type()
 
         try:
-            r = requests.get(parsed['link'], timeout=3)
+            r = requests.get(parsed['linker'], timeout=3)
         except RequestException:
-            await self.bot.say('Malformed link', delete_after=30)
+            await self.bot.say('Malformed linker', delete_after=30)
             return
 
         if r.status_code != 200:
@@ -156,8 +155,10 @@ class Soundboard:
             f.write(r.content)
 
         # TODO: not hard code default values
+        # TODO: check for uniqueness.
         sound = Sound(name=parsed['name'], filename=filename, volume=parsed['volume'] or 50,
-                      aliases=parsed['aliases'] or [], brief=parsed['brief'] or '', description=parsed['description'] or '')
+                      aliases=parsed['aliases'] or [], brief=parsed['brief'] or '',
+                      description=parsed['description'] or '')
 
         sound.save()
 
@@ -174,8 +175,8 @@ class Soundboard:
     async def remove_sound(self, ctx, name):
         try:
             sound = Sound.get(Sound.name == name)
-        except StopIteration:
-            await self.bot.say('Sound {0} not found.'.format(name))
+        except Sound.DoesNotExist:
+            await self.bot.say('Sound {0} not found.'.format(name), delete_after=30)
             return
 
         self._remove_sound_from_bot(sound)
