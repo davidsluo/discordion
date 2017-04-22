@@ -29,7 +29,10 @@ class Linker:
             await self.bot.say(link.text)
         else:
             links = Link.select()
-            message = '\n'.join(['`{0}` - `{1}`'.format(link.name, link.text) for link in links])
+            message = '\n'.join(['`{0}` - `{1}`'.format(
+                link.name,
+                link.text[:75] + (link.text[75:] and '...')
+            ) for link in links])
             await self.bot.say('Links:')
             await self.bot.say(message)
 
