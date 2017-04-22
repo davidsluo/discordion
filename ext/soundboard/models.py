@@ -1,12 +1,9 @@
-from peewee import CharField, TextField, IntegerField
+from peewee import CharField, IntegerField
 
-from database.models import ListField, BaseModel
+from database.models import BaseModel
 
 
 class Sound(BaseModel):
     name = CharField(unique=True)
     filename = CharField(unique=True)
     volume = IntegerField(default=50)
-    aliases = ListField(default=[])
-    brief = CharField()
-    description = TextField()
