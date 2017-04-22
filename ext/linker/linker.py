@@ -36,7 +36,7 @@ class Linker:
     @link.command(
         aliases=['a']
     )
-    async def add(self, name, text):
+    async def add(self, name, *, text):
         """
         Add a new link.
         :param name: The name of the link.
