@@ -23,7 +23,7 @@ class RNG:
             num1 = num1 or 1
             num2 = num2 or 6
 
-        await self.bot.say('{0} rolls {1} ({2} - {3}).'.format(
+        await self.bot.say('{0} rolls {1:n} ({2:n} - {3:n}).'.format(
             ctx.message.author.mention,
             random.randint(num1, num2),
             num1, num2))
