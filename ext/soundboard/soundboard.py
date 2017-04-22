@@ -33,10 +33,14 @@ class Soundboard:
     )
     async def soundboard(self, ctx: Context, name: str = None, volume: int = None):
         """
-        Play a sound. If no sound specified, will list all available sounds.
-        Args: The volume to play it at (0 to 100).
-            name: The sound to play.
+        Play a sound from the soundboard. Run this command with no arguments to list all available sounds.
+        Args:
+            name: 
+                Optional. 
+                The name of the sound to play.
             volume: 
+                Optional. 
+                The volume (0 to 100) to play the sound.
         """
         # Play `name`
         if name:
@@ -51,6 +55,8 @@ class Soundboard:
             if volume:
                 try:
                     volume = int(volume)
+                    volume = 100 if volume > 100 else volume
+                    volume = 0 if volume < 0 else volume
                 except ValueError:
                     await self.bot.say('Invalid volume argument: {0}'.format(volume))
                     return
@@ -88,7 +94,22 @@ class Soundboard:
         pass_context=True
     )
     async def add(self, ctx: Context, name: str, link: str = None, volume: int = 50):
-
+        """
+        Add a new sound to the soundboard.
+        Args:
+            name: 
+                Required. 
+                The name of the new sound.
+            link: 
+                Optional-ish. 
+                A link to download the sound. If not specified, 
+                this command must be run in the comment of 
+                an uploaded audio file.
+            volume: 
+                Optional. 
+                The default volume (0 to 100) for this sound. 
+                Defaults to 50.
+        """
         if not link:
             try:
                 link = ctx.message.attachments[0]['url']
@@ -111,6 +132,9 @@ class Soundboard:
         filehash = hashlib.sha256(r.content).hexdigest()
         filepath = '{0}/{1}'.format(self.__class__.save_path, filehash)
 
+        volume = 100 if volume > 100 else volume
+        volume = 0 if volume < 0 else volume
+
         sound = Sound(name=name, filename=filehash, volume=volume)
 
         try:
@@ -127,13 +151,14 @@ class Soundboard:
 
     @soundboard.command(
         description='Remove a sound from the soundboard.',
-        brief='Remove a sound',
+        brief='Delete a sound.',
         aliases=['d', 'del', 'remove', 'r', 'rm']
     )
     async def delete(self, name):
         """
         Delete a sound.
-        :param name: The sound to delete.
+        Args:
+            name: Required. The sound to delete. 
         """
         try:
             sound = Sound.get(Sound.name == name)
