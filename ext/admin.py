@@ -15,19 +15,27 @@ class Admin:
 
     @commands.command(
         name='invitelink',
-        aliases=['invite'],
-        description='Get the invite linker for this bot.'
+        aliases=['invite']
     )
     async def invite_link(self):
+        """
+        Get the invite link for this bot.
+        """
         await self.bot.say(INVITE_FORMAT.format(self.bot.config['discord']['client_id']))
 
     @commands.command(
         aliases=['cleanup', 'purge', 'clear'],
-        description='Clear this bot\'s messages from chat history',
-        brief='Clean up chat',
         pass_context=True
     )
     async def clean(self, ctx: Context, commands=False):
+        """
+        Clean up chat.
+        Deletes all messages from the bot and optionally command calls as well.
+        Args:
+            commands:
+                Optional (Yes/No).
+                Whether to clean up command calls as well.
+        """
         def is_bot(message: Message):
             return message.author == ctx.message.server.me
 

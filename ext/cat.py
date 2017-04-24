@@ -7,10 +7,11 @@ class Cat:
     def __init__(self, bot: Bot):
         self.bot = bot
 
-    @commands.command(
-        description='Get a random cat.'
-    )
+    @commands.command()
     async def cat(self):
+        """
+        Get a random cat.
+        """
         r = requests.get('http://random.cat/meow')
         if r.status_code == 200:
             cat = r.json()['file']

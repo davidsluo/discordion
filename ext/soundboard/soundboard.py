@@ -25,15 +25,14 @@ class Soundboard:
         Sound.create_table(fail_silently=True)
 
     @commands.group(
-        description='Interact with the soundboard.',
-        brief='Rick Roll on demand.',
         aliases=['sb'],
         pass_context=True,
         invoke_without_command=True
     )
     async def soundboard(self, ctx: Context, name: str = None, volume: int = None):
         """
-        Play a sound from the soundboard. Run this command with no arguments to list all available sounds.
+        Play a sound from the soundboard. 
+        Run this command with no arguments to list all available sounds.
         Args:
             name: 
                 Optional. 
@@ -88,8 +87,6 @@ class Soundboard:
 
     @soundboard.command(
         name='add',
-        brief='Add a new sound.',
-        description='Add a new sound to the soundboard.',
         aliases=['a'],
         pass_context=True
     )
@@ -150,8 +147,6 @@ class Soundboard:
         await self.bot.say('Added `{0}`'.format(name))
 
     @soundboard.command(
-        description='Remove a sound from the soundboard.',
-        brief='Delete a sound.',
         aliases=['d', 'del', 'remove', 'r', 'rm']
     )
     async def delete(self, name):

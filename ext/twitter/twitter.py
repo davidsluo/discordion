@@ -37,7 +37,7 @@ class Twitter:
         self.stream.filter(follow=[str(user.user_id) for user in TwitterEcho.select()], async=True)
 
     async def echo_tweet(self, status: Status):
-        print(status)
+        # print(status)
         author = status.author
         echo = TwitterEcho.get(TwitterEcho.user_id == author.id)
         channel = self.bot.get_channel(echo.channel)
@@ -56,6 +56,9 @@ class Twitter:
         invoke_without_command=True
     )
     async def twitter(self):
+        """
+        List the Twitter users the bot is currently following.
+        """
         following = ', '.join(['@' + user.screen_name for user in TwitterEcho.select()])
 
         await self.bot.say('Currently following:\n{0}'.format(following))
@@ -66,8 +69,10 @@ class Twitter:
     )
     async def follow(self, ctx: Context, user):
         """
-        Automatically posts new tweets by <user> to this channel.
-        :param user: the @handle of the user.
+        Add a user to the bot's follow list.
+        Bot will post user's tweets to this channel. 
+        Args:
+            user: The @handle of the user to follow.
         """
         user = self.api.get_user(user)
 
@@ -86,6 +91,11 @@ class Twitter:
         aliases=['uf']
     )
     async def unfollow(self, user):
+        """
+        Remove a user from the bot's follow list.
+        Args:
+            user: The user to unfollow.
+        """
         user = self.api.get_user(user)
 
         try:
@@ -103,6 +113,11 @@ class Twitter:
         aliases=['l']
     )
     async def latest(self, user):
+        """
+        Get the latest tweet from a specified user.
+        Args:
+            user: The user to get. 
+        """
         # TODO: Fix this
         user = self.api.get_user(user)
         # await self.bot.say(

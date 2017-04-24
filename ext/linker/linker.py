@@ -17,7 +17,9 @@ class Linker:
     async def link(self, name=None):
         """
         Get a link.
-        :param name: The name of the link to be retrieved. 
+        Args:
+            name:
+                The name of the link to be retrieved. 
         """
         if name:
             try:
@@ -42,8 +44,10 @@ class Linker:
     async def add(self, name, *, text):
         """
         Add a new link.
-        :param name: The name of the link.
-        :param text: The text to associate with the name.
+            name: 
+                The name of the link.
+            text: 
+                The text to associate with the name.
         """
         link = Link(name=name, text=text)
         try:
@@ -60,7 +64,8 @@ class Linker:
     async def delete(self, name):
         """
         Delete a link.
-        :param name: The link to delete. 
+            name: 
+                The link to delete. 
         """
         try:
             link = Link.get(Link.name == name)
