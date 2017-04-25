@@ -1,20 +1,27 @@
 import hashlib
 import os
 
+import asyncio
 import requests
 from discord import InvalidArgument
 from discord.ext import commands
-from discord.ext.commands import Context
-from peewee import IntegrityError
+from discord.ext.commands import Context, Bot
+from peewee import IntegrityError, CharField, IntegerField
 from requests import RequestException
 
-from ext.soundboard.models import Sound
+from database import BaseModel
+
+
+class Sound(BaseModel):
+    name = CharField(unique=True)
+    filename = CharField(unique=True)
+    volume = IntegerField(default=50)
 
 
 class Soundboard:
     save_path = os.getcwd() + os.path.abspath('/sounds')
 
-    def __init__(self, bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
 
         try:
@@ -23,6 +30,22 @@ class Soundboard:
             pass
 
         Sound.create_table(fail_silently=True)
+
+        self.play_sound = asyncio.Event()
+        self.sound_file = None
+        self.volume = None
+        self.voice = None
+        self.bot.loop.create_task(self.soundboard_task())
+
+    async def soundboard_task(self):
+        while True:
+            await self.play_sound.wait()
+            player = self.voice.create_ffmpeg_player(Soundboard.save_path + '/' + self.sound_file)
+            player.volume = self.volume / 100
+            player.start()
+            player.join()
+            await self.voice.disconnect()
+            self.play_sound.clear()
 
     @commands.group(
         aliases=['sb'],
@@ -49,35 +72,31 @@ class Soundboard:
                 await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
                 return
 
-            channel = ctx.message.author.voice.voice_channel
-
             if volume:
                 try:
                     volume = int(volume)
-                    volume = 100 if volume > 100 else volume
-                    volume = 0 if volume < 0 else volume
                 except ValueError:
                     await self.bot.say('Invalid volume argument: {0}'.format(volume))
                     return
+                volume = 100 if volume > 100 else volume
+                volume = 0 if volume < 0 else volume
             else:
                 volume = sound.volume
 
-            if channel:
-                try:
-                    client = await ctx.bot.join_voice_channel(channel)
+            channel = ctx.message.author.voice_channel
+            if channel is None:
+                await self.bot.say('You are not in a voice channel.')
+                return
 
-                    player = client.create_ffmpeg_player(Soundboard.save_path + '/' + sound.filename)
+            try:
+                self.voice = await ctx.bot.join_voice_channel(channel)
+            except InvalidArgument:
+                await self.bot.say('This is not a voice channel.', delete_after=30)
+                return
 
-                    player.volume = volume / 100
-
-                    player.start()
-                    player.join()
-
-                    await client.disconnect()
-                except InvalidArgument:
-                    # if join_voice_channel fails.
-                    # TODO: add feedback here?
-                    pass
+            self.sound_file = sound.filename
+            self.volume = volume
+            self.play_sound.set()
         # List all sounds.
         else:
             sounds = Sound.select()
