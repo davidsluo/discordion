@@ -1,7 +1,14 @@
 from discord.ext import commands
 from peewee import IntegrityError
 
-from ext.linker.models import Link
+from peewee import CharField
+
+from database.models import BaseModel
+
+
+class Link(BaseModel):
+    name = CharField(unique=True)
+    text = CharField()
 
 
 class Linker:
