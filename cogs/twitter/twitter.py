@@ -8,8 +8,8 @@ from discord.ext.commands import Bot, Context
 from peewee import IntegrityError
 from tweepy import Status
 
-from ext.twitter.listener import TwitterStreamListener
-from ext.twitter.models import TwitterEcho
+from cogs.twitter.listener import TwitterStreamListener
+from cogs.twitter.models import TwitterEcho
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
