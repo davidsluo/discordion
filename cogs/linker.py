@@ -1,7 +1,7 @@
 from discord.ext import commands
-from peewee import IntegrityError
-
+from discord.ext.commands import Context
 from peewee import CharField
+from peewee import IntegrityError
 
 from database.models import BaseModel
 
@@ -19,9 +19,10 @@ class Linker:
 
     @commands.group(
         aliases=['l'],
-        invoke_without_command=True
+        invoke_without_command=True,
+        pass_context=True
     )
-    async def link(self, name=None):
+    async def link(self, ctx: Context, name=None):
         """
         Get a link.
         Args:
@@ -30,7 +31,7 @@ class Linker:
         """
         if name:
             try:
-                link = Link.get(Link.name == name)
+                link = Link.get(Link.server == ctx.message.server.id and Link.name == name)
             except Link.DoesNotExist:
                 await self.bot.say('Link `{0}` not found.'.format(name), delete_after=30)
                 return
@@ -46,9 +47,10 @@ class Linker:
             await self.bot.say(message)
 
     @link.command(
-        aliases=['a']
+        aliases=['a'],
+        pass_context=True
     )
-    async def add(self, name, *, text):
+    async def add(self, ctx, name, *, text):
         """
         Add a new link.
             name: 
@@ -56,7 +58,7 @@ class Linker:
             text: 
                 The text to associate with the name.
         """
-        link = Link(name=name, text=text)
+        link = Link(name=name, text=text, server=ctx.message.server.id)
         try:
             link.save()
         except IntegrityError:
@@ -66,16 +68,17 @@ class Linker:
         await self.bot.say('Added `{0}`:\n`{1}`'.format(name, text))
 
     @link.command(
-        aliases=['d', 'del', 'remove', 'r', 'rm']
+        aliases=['d', 'del', 'remove', 'r', 'rm'],
+        pass_context=True
     )
-    async def delete(self, name):
+    async def delete(self, ctx, name):
         """
         Delete a link.
             name: 
                 The link to delete. 
         """
         try:
-            link = Link.get(Link.name == name)
+            link = Link.get(Link.server == ctx.message.server.id and Link.name == name)
         except Link.DoesNotExist:
             await self.bot.say('Link `{0}` not found.'.format(name), delete_after=30)
             return

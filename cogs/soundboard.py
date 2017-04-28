@@ -1,7 +1,7 @@
+import asyncio
 import hashlib
 import os
 
-import asyncio
 import requests
 from discord import InvalidArgument
 from discord.ext import commands
@@ -67,7 +67,7 @@ class Soundboard:
         # Play `name`
         if name:
             try:
-                sound = Sound.get(Sound.name == name)
+                sound = Sound.get(Sound.server == ctx.message.server.id and Sound.name == name)
             except Sound.DoesNotExist:
                 await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
                 return
@@ -151,7 +151,7 @@ class Soundboard:
         volume = 100 if volume > 100 else volume
         volume = 0 if volume < 0 else volume
 
-        sound = Sound(name=name, filename=filehash, volume=volume)
+        sound = Sound(server=ctx.message.server.id, name=name, filename=filehash, volume=volume)
 
         try:
             sound.save()
@@ -166,9 +166,10 @@ class Soundboard:
         await self.bot.say('Added `{0}`'.format(name))
 
     @soundboard.command(
-        aliases=['d', 'del', 'remove', 'r', 'rm']
+        aliases=['d', 'del', 'remove', 'r', 'rm'],
+        pass_context=True
     )
-    async def delete(self, name):
+    async def delete(self, ctx, name):
         """
         Delete a sound.
         Args:
@@ -177,7 +178,7 @@ class Soundboard:
                 The sound to delete. 
         """
         try:
-            sound = Sound.get(Sound.name == name)
+            sound = Sound.get(Sound.server == ctx.message.server.id and Sound.name == name)
         except Sound.DoesNotExist:
             await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
             return

@@ -1,8 +1,6 @@
 import logging
 
-import asyncio
 import tweepy
-from discord import Object
 from discord.ext import commands
 from discord.ext.commands import Bot, Context
 from peewee import IntegrityError
@@ -76,7 +74,8 @@ class Twitter:
         """
         user = self.api.get_user(user)
 
-        echo = TwitterEcho(user_id=user.id, screen_name=user.screen_name, channel=ctx.message.channel.id)
+        echo = TwitterEcho(server=ctx.message.server.id, user_id=user.id, screen_name=user.screen_name,
+                           channel=ctx.message.channel.id)
 
         try:
             saved = echo.save()
@@ -88,9 +87,10 @@ class Twitter:
         await self.bot.say('Now following @{0.screen_name}.'.format(user))
 
     @twitter.command(
-        aliases=['uf']
+        aliases=['uf'],
+        pass_context=True
     )
-    async def unfollow(self, user):
+    async def unfollow(self, ctx, user):
         """
         Remove a user from the bot's follow list.
         Args:
@@ -99,7 +99,7 @@ class Twitter:
         user = self.api.get_user(user)
 
         try:
-            echo = TwitterEcho.get(TwitterEcho.user_id == user.id)
+            echo = TwitterEcho.get(TwitterEcho.server == ctx.message.server.id and TwitterEcho.user_id == user.id)
         except TwitterEcho.DoesNotExist:
             await self.bot.say('Was not following @{0.screen_name}.'.format(user))
             return
