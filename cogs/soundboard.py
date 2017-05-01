@@ -1,14 +1,16 @@
 import asyncio
 import hashlib
 import os
+from collections import OrderedDict
 
 import requests
-from discord import InvalidArgument
+from discord import InvalidArgument, Reaction, User, Member
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
 from peewee import IntegrityError, CharField, IntegerField
 from requests import RequestException
 
+from cogs.utils.menu import Menu, DefaultEmoji
 from database import BaseModel
 
 
@@ -35,7 +37,35 @@ class Soundboard:
         self.sound_file = None
         self.volume = None
         self.voice = None
+
         self.bot.loop.create_task(self.soundboard_task())
+
+    @property
+    def _menu_items(self):
+        emoji = [
+            DefaultEmoji.one.value,
+            DefaultEmoji.two.value,
+            DefaultEmoji.three.value,
+            DefaultEmoji.four.value,
+            DefaultEmoji.five.value
+        ]
+        sounds = Sound.select()
+        return [(emoji[i % len(emoji)], sound.name) for sound, i in zip(sounds, range(len(sounds)))]
+
+    async def on_menu(self, index: int, reaction: Reaction, member: Member):
+        try:
+            self.voice = await self.bot.join_voice_channel(member.voice_channel)
+        except InvalidArgument:
+            await self.bot.say('This is not a voice channel.', delete_after=30)
+            return
+
+        # This feels weird
+        sound_name = self._menu_items[index][1]
+
+        sound = Sound.get(Sound.name == sound_name)
+        self.volume = sound.volume
+        self.sound_file = sound.filename
+        self.play_sound.set()
 
     async def soundboard_task(self):
         while True:
@@ -103,6 +133,14 @@ class Soundboard:
             message = ', '.join(sorted([sound.name for sound in sounds]))
             await self.bot.say('Sounds:')
             await self.bot.say(message)
+
+    @soundboard.command(
+        pass_context=True
+    )
+    async def menu(self, ctx: Context):
+
+        m = Menu(self.bot, self.on_menu, self._menu_items)
+        await m.say()
 
     @soundboard.command(
         name='add',
