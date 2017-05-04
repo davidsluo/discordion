@@ -1,7 +1,9 @@
 import inspect
 
+import requests
+from discord import InvalidArgument, Game
 from discord.ext import commands
-from discord.ext.commands import Bot
+from discord.ext.commands import Bot, cooldown
 
 from cogs.utils import checks
 
@@ -9,6 +11,36 @@ from cogs.utils import checks
 class Admin:
     def __init__(self, bot: Bot):
         self.bot = bot
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    @cooldown(rate=2, per=3600)
+    async def username(self, username):
+        await self.bot.edit_profile(username=username)
+        await self.bot.say('\N{THUMBS UP SIGN}')
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def avatar(self, url):
+        r = requests.get(url)
+
+        if r.status_code != 200:
+            await self.bot.say('Got error code `{0}` while downloading avatar.'.format(r.status_code))
+            return
+
+        try:
+            await self.bot.edit_profile(avatar=r.content)
+        except InvalidArgument:
+            await self.bot.say('Wrong format for avatar.')
+        else:
+            await self.bot.say('\N{THUMBS UP SIGN}')
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    @cooldown(rate=2, per=60)
+    async def presence(self, *, presence: Game):
+        await self.bot.change_presence(game=presence)
+        await self.bot.say('\N{THUMBS UP SIGN}')
 
     # Stuff below here is from Rapptz's admin cog
     # https://github.com/Rapptz/RoboDanny/blob/master/cogs/admin.py
