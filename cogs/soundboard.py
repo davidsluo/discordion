@@ -9,6 +9,7 @@ from discord.ext.commands import Context, Bot
 from peewee import IntegrityError, CharField, IntegerField
 from requests import RequestException
 
+from cogs.utils import checks
 from cogs.utils.database import BaseModel, Server
 from cogs.utils.menu import Menu, DefaultEmoji
 
@@ -95,7 +96,7 @@ class Soundboard:
         # Play `name`
         if name:
             try:
-                sound = Sound.get(Sound.server == ctx.message.server.id, Sound.name == name)
+                sound = Sound.get((Sound.server == ctx.message.server.id) | (Sound.server == None), Sound.name == name)
             except Sound.DoesNotExist:
                 await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
                 return
@@ -127,13 +128,72 @@ class Soundboard:
             self.play_sound.set()
         # List all sounds.
         else:
-            sounds = Sound.select().where(Sound.server == ctx.message.server.id)
+            sounds = Sound.select().where((Sound.server == ctx.message.server.id) | (Sound.server == None))
             if len(sounds) > 0:
                 message = ', '.join(sorted([sound.name for sound in sounds]))
                 a = message
             else:
                 message = 'No sounds. Add one with !soundboard add.'
             await self.bot.say('Sounds:\n{0}'.format(message))
+
+    @soundboard.command(hidden=True, pass_context=True)
+    @checks.is_owner()
+    async def all(self, ctx: Context, name: str = None, volume: int = None):
+        # Play `name`
+        if name:
+            try:
+                sound = Sound.get(Sound.name == name)
+            except Sound.DoesNotExist:
+                await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
+                return
+
+            if volume:
+                try:
+                    volume = int(volume)
+                except ValueError:
+                    await self.bot.say('Invalid volume argument: {0}'.format(volume))
+                    return
+                volume = 100 if volume > 100 else volume
+                volume = 0 if volume < 0 else volume
+            else:
+                volume = sound.volume
+
+            channel = ctx.message.author.voice_channel
+            if channel is None:
+                await self.bot.say('You are not in a voice channel.')
+                return
+
+            try:
+                self.voice = await ctx.bot.join_voice_channel(channel)
+            except InvalidArgument:
+                await self.bot.say('This is not a voice channel.', delete_after=30)
+                return
+
+            self.sound_file = sound.filename
+            self.volume = volume
+            self.play_sound.set()
+        # List all sounds.
+        else:
+            sounds = Sound.select()
+            if len(sounds) > 0:
+                message = ', '.join(sorted([sound.name for sound in sounds]))
+                a = message
+            else:
+                message = 'No sounds. Add one with !soundboard add.'
+            await self.bot.say('Sounds:\n{0}'.format(message))
+
+    @soundboard.command(hidden=True)
+    @checks.is_owner()
+    async def globalize(self, *, name):
+        try:
+            sound = Sound.get(Sound.name == name)
+        except Sound.DoesNotExist:
+            await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
+            return
+
+        sound.server = None
+        sound.save()
+        await self.bot.say('\N{THUMBS UP SIGN}')
 
     @soundboard.command(
         pass_context=True
