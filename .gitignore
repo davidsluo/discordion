@@ -100,3 +100,4 @@ ENV/
 config.yml
 *.db
 praw.ini
+.idea
