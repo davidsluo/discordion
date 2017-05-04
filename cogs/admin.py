@@ -1,8 +1,10 @@
-from datetime import datetime, timedelta
-
+import inspect
 from discord import Message, Forbidden
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
+
+import cogs.utils.checks
+from cogs.utils import checks
 
 INVITE_FORMAT = 'https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=0'
 
@@ -27,6 +29,7 @@ class Admin:
         aliases=['cleanup', 'purge', 'clear'],
         pass_context=True
     )
+    @commands.has_permissions(manage_channels=True)
     async def clean(self, ctx: Context, commands=False):
         """
         Clean up chat.
@@ -36,6 +39,7 @@ class Admin:
                 Optional (Yes/No).
                 Whether to clean up command calls as well.
         """
+
         def is_bot(message: Message):
             return message.author == ctx.message.server.me
 
@@ -55,6 +59,74 @@ class Admin:
             return
 
         await self.bot.say('Deleted {0} message(s).'.format(len(deleted)), delete_after=30)
+
+    # Stuff below here is from Rapptz's admin cog
+    # https://github.com/Rapptz/RoboDanny/blob/master/cogs/admin.py
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def load(self, *, module: str):
+        """Loads a module."""
+        try:
+            self.bot.load_extension(module)
+        except Exception as e:
+            await self.bot.say('\N{PISTOL}')
+            await self.bot.say('{}: {}'.format(type(e).__name__, e))
+        else:
+            await self.bot.say('\N{OK HAND SIGN}')
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def unload(self, *, module: str):
+        """Unloads a module."""
+        try:
+            self.bot.unload_extension(module)
+        except Exception as e:
+            await self.bot.say('\N{PISTOL}')
+            await self.bot.say('{}: {}'.format(type(e).__name__, e))
+        else:
+            await self.bot.say('\N{OK HAND SIGN}')
+
+    @commands.command(name='reload', hidden=True)
+    @checks.is_owner()
+    async def _reload(self, *, module: str):
+        """Reloads a module."""
+        try:
+            self.bot.unload_extension(module)
+            self.bot.load_extension(module)
+        except Exception as e:
+            await self.bot.say('\N{PISTOL}')
+            await self.bot.say('{}: {}'.format(type(e).__name__, e))
+        else:
+            await self.bot.say('\N{OK HAND SIGN}')
+
+    @commands.command(pass_context=True, hidden=True)
+    @checks.is_owner()
+    async def debug(self, ctx, *, code: str):
+        """Evaluates code."""
+        code = code.strip('` ')
+        python = '```py\n{}\n```'
+        result = None
+
+        env = {
+            'bot': self.bot,
+            'ctx': ctx,
+            'message': ctx.message,
+            'server': ctx.message.server,
+            'channel': ctx.message.channel,
+            'author': ctx.message.author
+        }
+
+        env.update(globals())
+
+        try:
+            result = eval(code, env)
+            if inspect.isawaitable(result):
+                result = await result
+        except Exception as e:
+            await self.bot.say(python.format(type(e).__name__ + ': ' + str(e)))
+            return
+
+        await self.bot.say(python.format(result))
 
 
 def setup(bot):
