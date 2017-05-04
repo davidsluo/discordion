@@ -3,7 +3,7 @@ from discord.ext.commands import Context
 from peewee import CharField
 from peewee import IntegrityError
 
-from database.models import BaseModel
+from cogs.utils.database import BaseModel, Server
 
 
 class Link(BaseModel):
@@ -31,14 +31,14 @@ class Linker:
         """
         if name:
             try:
-                link = Link.get(Link.server == ctx.message.server.id and Link.name == name)
+                link = Link.get(Link.server == ctx.message.server.id, Link.name == name)
             except Link.DoesNotExist:
                 await self.bot.say('Link `{0}` not found.'.format(name), delete_after=30)
                 return
 
             await self.bot.say(link.text)
         else:
-            links = Link.select()
+            links = Link.select().where(Link.server == ctx.message.server.id)
             message = '\n'.join(['`{0}` - `{1}`'.format(
                 link.name,
                 link.text[:75] + (link.text[75:] and '...')
@@ -58,7 +58,7 @@ class Linker:
             text: 
                 The text to associate with the name.
         """
-        link = Link(name=name, text=text, server=ctx.message.server.id)
+        link = Link(name=name, text=text, server=Server.get_server(ctx.message.server.id))
         try:
             link.save()
         except IntegrityError:
@@ -78,7 +78,7 @@ class Linker:
                 The link to delete. 
         """
         try:
-            link = Link.get(Link.server == ctx.message.server.id and Link.name == name)
+            link = Link.get(Link.server == ctx.message.server.id, Link.name == name)
         except Link.DoesNotExist:
             await self.bot.say('Link `{0}` not found.'.format(name), delete_after=30)
             return

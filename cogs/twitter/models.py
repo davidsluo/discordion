@@ -1,6 +1,6 @@
 from peewee import CharField, IntegerField
 
-from database.models import BaseModel
+from cogs.utils.database import BaseModel
 
 
 class TwitterEcho(BaseModel):

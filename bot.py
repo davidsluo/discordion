@@ -2,7 +2,9 @@ import logging
 
 import yaml
 from discord.ext.commands import Bot
-from peewee import SqliteDatabase
+
+from cogs.utils import database
+from cogs.utils.database import db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -14,11 +16,11 @@ with open('config.yml', 'r') as f:
 bot = Bot(command_prefix="!")
 
 bot.config = config
-db = SqliteDatabase('database.db')
 
 
 def load():
     db.connect()
+    database.Server.create_table(fail_silently=True)
     logger.info('Connecting to database.')
 
     extensions = config['extensions']

@@ -1,17 +1,16 @@
 import asyncio
 import hashlib
 import os
-from collections import OrderedDict
 
 import requests
-from discord import InvalidArgument, Reaction, User, Member
+from discord import InvalidArgument, Reaction, Member
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
 from peewee import IntegrityError, CharField, IntegerField
 from requests import RequestException
 
+from cogs.utils.database import BaseModel, Server
 from cogs.utils.menu import Menu, DefaultEmoji
-from database import BaseModel
 
 
 class Sound(BaseModel):
@@ -40,8 +39,7 @@ class Soundboard:
 
         self.bot.loop.create_task(self.soundboard_task())
 
-    @property
-    def _menu_items(self):
+    def _get_menu_items(self, server_id):
         emoji = [
             DefaultEmoji.one.value,
             DefaultEmoji.two.value,
@@ -49,7 +47,7 @@ class Soundboard:
             DefaultEmoji.four.value,
             DefaultEmoji.five.value
         ]
-        sounds = Sound.select()
+        sounds = Sound.select().where(Sound.server == server_id)
         return [(emoji[i % len(emoji)], sound.name) for sound, i in zip(sounds, range(len(sounds)))]
 
     async def on_menu(self, index: int, reaction: Reaction, member: Member):
@@ -60,7 +58,7 @@ class Soundboard:
             return
 
         # This feels weird
-        sound_name = self._menu_items[index][1]
+        sound_name = self._get_menu_items(reaction.message.server.id)[index][1]
 
         sound = Sound.get(Sound.name == sound_name)
         self.volume = sound.volume
@@ -97,7 +95,7 @@ class Soundboard:
         # Play `name`
         if name:
             try:
-                sound = Sound.get(Sound.server == ctx.message.server.id and Sound.name == name)
+                sound = Sound.get(Sound.server == ctx.message.server.id, Sound.name == name)
             except Sound.DoesNotExist:
                 await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
                 return
@@ -129,17 +127,20 @@ class Soundboard:
             self.play_sound.set()
         # List all sounds.
         else:
-            sounds = Sound.select()
-            message = ', '.join(sorted([sound.name for sound in sounds]))
-            await self.bot.say('Sounds:')
-            await self.bot.say(message)
+            sounds = Sound.select().where(Sound.server == ctx.message.server.id)
+            if len(sounds) > 0:
+                message = ', '.join(sorted([sound.name for sound in sounds]))
+                a = message
+            else:
+                message = 'No sounds. Add one with !soundboard add.'
+            await self.bot.say('Sounds:\n{0}'.format(message))
 
     @soundboard.command(
         pass_context=True
     )
     async def menu(self, ctx: Context):
 
-        m = Menu(self.bot, self.on_menu, self._menu_items)
+        m = Menu(self.bot, self.on_menu, self._get_menu_items(ctx.message.server.id))
         await m.say()
 
     @soundboard.command(
@@ -189,7 +190,7 @@ class Soundboard:
         volume = 100 if volume > 100 else volume
         volume = 0 if volume < 0 else volume
 
-        sound = Sound(server=ctx.message.server.id, name=name, filename=filehash, volume=volume)
+        sound = Sound(server=Server.get_server(ctx.message.server.id), name=name, filename=filehash, volume=volume)
 
         try:
             sound.save()
@@ -216,7 +217,7 @@ class Soundboard:
                 The sound to delete. 
         """
         try:
-            sound = Sound.get(Sound.server == ctx.message.server.id and Sound.name == name)
+            sound = Sound.get(Sound.server == ctx.message.server.id, Sound.name == name)
         except Sound.DoesNotExist:
             await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
             return

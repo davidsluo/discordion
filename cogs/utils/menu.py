@@ -45,6 +45,7 @@ class Menu:
         start = int(self._page * self.per_page)
         stop = start + self.per_page if start + self.per_page < len(self.menu_items) else len(self.menu_items) - 1
         message_text = '\n'.join(['{0} {1}'.format(emoji, text) for emoji, text in self.menu_items[start:stop]])
+        message_text += '\nPage {0} of {1}'.format(self._page + 1, self._max_page + 1)
 
         message = await self.bot.say(message_text)
         await self._process_menu(message)
@@ -104,6 +105,7 @@ class Menu:
         start = int(self._page * self.per_page)
         stop = start + self.per_page if start + self.per_page < len(self.menu_items) else len(self.menu_items) - 1
         message_text = '\n'.join(['{0} {1}'.format(emoji, text) for emoji, text in self.menu_items[start:stop]])
+        message_text += '\nPage {0} of {1}'.format(self._page + 1, self._max_page + 1)
 
         await self.bot.edit_message(self._message, new_content=message_text)
 

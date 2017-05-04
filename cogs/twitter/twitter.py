@@ -8,6 +8,7 @@ from tweepy import Status
 
 from cogs.twitter.listener import TwitterStreamListener
 from cogs.twitter.models import TwitterEcho
+from cogs.utils.database import Server
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -74,8 +75,8 @@ class Twitter:
         """
         user = self.api.get_user(user)
 
-        echo = TwitterEcho(server=ctx.message.server.id, user_id=user.id, screen_name=user.screen_name,
-                           channel=ctx.message.channel.id)
+        echo = TwitterEcho(server=Server.get_server(ctx.message.server.id), user_id=user.id,
+                           screen_name=user.screen_name, channel=ctx.message.channel.id)
 
         try:
             saved = echo.save()
@@ -99,7 +100,7 @@ class Twitter:
         user = self.api.get_user(user)
 
         try:
-            echo = TwitterEcho.get(TwitterEcho.server == ctx.message.server.id and TwitterEcho.user_id == user.id)
+            echo = TwitterEcho.get(TwitterEcho.server == ctx.message.server.id, TwitterEcho.user_id == user.id)
         except TwitterEcho.DoesNotExist:
             await self.bot.say('Was not following @{0.screen_name}.'.format(user))
             return
