@@ -10,11 +10,11 @@ from peewee import IntegrityError, CharField, IntegerField
 from requests import RequestException
 
 from cogs.utils import checks
-from cogs.utils.database import BaseModel, Server
+from cogs.utils.database import PerServerModel, Server
 from cogs.utils.menu import Menu, DefaultEmoji
 
 
-class Sound(BaseModel):
+class Sound(PerServerModel):
     name = CharField(unique=True)
     filename = CharField(unique=True)
     volume = IntegerField(default=50)

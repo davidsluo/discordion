@@ -4,10 +4,10 @@ from peewee import CharField
 from peewee import IntegrityError
 
 from cogs.utils import checks
-from cogs.utils.database import BaseModel, Server
+from cogs.utils.database import PerServerModel, Server
 
 
-class Link(BaseModel):
+class Link(PerServerModel):
     name = CharField(unique=True)
     text = CharField()
 

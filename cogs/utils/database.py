@@ -5,7 +5,12 @@ from peewee import TextField, Model, CharField, ForeignKeyField, SqliteDatabase
 db = SqliteDatabase('database.db')
 
 
-class Server(Model):
+class BaseModel(Model):
+    class Meta:
+        database = db
+
+
+class Server(BaseModel):
     server_id = CharField(unique=True)
 
     @classmethod
@@ -18,15 +23,9 @@ class Server(Model):
 
         return s
 
-    class Meta:
-        database = db
 
-
-class BaseModel(Model):
+class PerServerModel(BaseModel):
     server = ForeignKeyField(Server, null=True, to_field="server_id")
-
-    class Meta:
-        database = db
 
 
 class ListField(TextField):
