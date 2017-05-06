@@ -1,4 +1,5 @@
 import asyncio
+import difflib
 import hashlib
 import os
 
@@ -98,7 +99,13 @@ class Soundboard:
             try:
                 sound = Sound.get((Sound.server == ctx.message.server.id) | (Sound.server == None), Sound.name == name)
             except Sound.DoesNotExist:
-                await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
+                possibilities = [s.name for s in
+                                 Sound.select().where((Sound.server == ctx.message.server.id) | (Sound.server == None))]
+                close = difflib.get_close_matches(name, possibilities=possibilities)
+                if len(close) > 0:
+                    await self.bot.say('Sound `{0}` not found. Did you mean:\n{1}'.format(name, '\n'.join(close)))
+                else:
+                    await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
                 return
 
             if volume:
@@ -144,7 +151,12 @@ class Soundboard:
             try:
                 sound = Sound.get(Sound.name == name)
             except Sound.DoesNotExist:
-                await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
+                possibilities = [s.name for s in Sound.select()]
+                close = difflib.get_close_matches(name, possibilities=possibilities)
+                if len(close) > 0:
+                    await self.bot.say('Sound `{0}` not found. Did you mean:\n{1}'.format(name, '\n'.join(close)))
+                else:
+                    await self.bot.say('Sound `{0}` not found.'.format(name), delete_after=30)
                 return
 
             if volume:
