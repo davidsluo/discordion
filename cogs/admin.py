@@ -42,6 +42,12 @@ class Admin:
         await self.bot.change_presence(game=presence)
         await self.bot.say('\N{THUMBS UP SIGN}')
 
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def cogs(self):
+        cogs = '\n'.join(self.bot.extensions)
+        await self.bot.say('Cogs:\n```{0}```'.format(cogs))
+
     # Stuff below here is from Rapptz's admin cog
     # https://github.com/Rapptz/RoboDanny/blob/master/cogs/admin.py
     @commands.command(hidden=True)
