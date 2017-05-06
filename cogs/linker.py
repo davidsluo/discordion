@@ -1,9 +1,8 @@
 import difflib
 
-import peewee
 from discord.ext import commands
 from discord.ext.commands import Context
-from peewee import CharField, fn
+from peewee import CharField
 from peewee import IntegrityError
 
 from cogs.utils import checks
@@ -144,4 +143,4 @@ def setup(bot):
 def teardown(bot):
     # this is ghetto af.
     # TODO: make this not ghetto af
-    del Link.server.rel_model._meta.reverse_rel['{0}_set'.format(Link.__name__)]
+    del Link.server.rel_model._meta.reverse_rel['{0}_set'.format(Link.__name__.lower())]
