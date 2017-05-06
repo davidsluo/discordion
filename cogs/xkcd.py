@@ -132,8 +132,8 @@ class XKCD:
                 try:
                     c = Comic.get(fn.Lower(Comic.title) == comic.lower())
                 except Comic.DoesNotExist:
-                    possiblities = [comic.title for comic in Comic.select()]
-                    close = difflib.get_close_matches(comic, possiblities)
+                    possibilities = [comic.title for comic in Comic.select()]
+                    close = difflib.get_close_matches(comic, possibilities=possibilities)
                     if len(close) > 0:
                         await self.bot.say('Comic not found. Did you mean:\n{0}'.format('\n'.join(close)))
                     else:
