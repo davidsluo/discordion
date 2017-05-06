@@ -1,4 +1,6 @@
 import asyncio
+import difflib
+import logging
 from json import JSONDecodeError
 
 import aiohttp
@@ -6,7 +8,10 @@ from discord.ext import commands
 from discord.ext.commands import Bot, cooldown, Context
 from peewee import CharField, IntegerField, TextField, fn
 
+from cogs.utils import checks
 from cogs.utils.database import BaseModel, db
+
+logger = logging.getLogger(__name__)
 
 
 class Comic(BaseModel):
@@ -27,11 +32,21 @@ class XKCD:
     def __init__(self, bot: Bot):
         self.bot = bot
         Comic.create_table(fail_silently=True)
+        self.bot.loop.create_task(self.auto_index_task())
+
+    async def auto_index_task(self):
+        while True:
+            await self.index_comics()
+            self.index.reset_cooldown()
+            await asyncio.sleep(60 * 60 * 24)
 
     async def index_comics(self):
+        logger.info('Indexing xkcd comics.')
+
         async def fetch(sem, url, session):
             async with sem:
                 async with session.get(url) as response:
+                    logging.debug('Retrieving comic from {0}.'.format(url))
                     try:
                         return await response.json()
                     except JSONDecodeError:
@@ -72,9 +87,13 @@ class XKCD:
                     for i in range(0, len(new_comics), 100):
                         Comic.insert_many(new_comics[i:i + 100]).execute()
 
-    @commands.command()
-    @cooldown(rate=1, per=3600 * 24)
+    @commands.command(hidden=True)
+    @cooldown(rate=1, per=3600 * 12)
+    @checks.is_owner()
     async def index(self):
+        """
+        Manually update database of comics. Automatically runs once a day.
+        """
         message = await self.bot.say('Indexing comics...')
         await self.bot.type()
         await self.index_comics()
@@ -82,6 +101,11 @@ class XKCD:
 
     @commands.command(pass_context=True)
     async def xkcd(self, ctx: Context, *, comic=None):
+        """
+        Get an xkcd comic.
+        Args:
+            comic: The number or title of the comic to retrieve. 
+        """
         link_fmt = 'https://xkcd.com/{0}'
         if comic is None:
             try:
@@ -108,7 +132,12 @@ class XKCD:
                 try:
                     c = Comic.get(fn.Lower(Comic.title) == comic.lower())
                 except Comic.DoesNotExist:
-                    await self.bot.say('Comic does not exist.', delete_after=30)
+                    possiblities = [comic.title for comic in Comic.select()]
+                    close = difflib.get_close_matches(comic, possiblities)
+                    if len(close) > 0:
+                        await self.bot.say('Comic not found. Did you mean:\n{0}'.format('\n'.join(close)))
+                    else:
+                        await self.bot.say('Comic not found.')
                     return
 
             await self.bot.say(link_fmt.format(c.num))
