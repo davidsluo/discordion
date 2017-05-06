@@ -37,7 +37,6 @@ class XKCD:
     async def auto_index_task(self):
         while True:
             await self.index_comics()
-            self.index.reset_cooldown()
             await asyncio.sleep(60 * 60 * 24)
 
     async def index_comics(self):
