@@ -131,3 +131,8 @@ class Twitter:
 
 def setup(bot):
     bot.add_cog(Twitter(bot))
+
+def teardown(bot):
+    # this is ghetto af.
+    # TODO: make this not ghetto af
+    del TwitterEcho.server.rel_model._meta.reverse_rel['{0}_set'.format(TwitterEcho.__name__)]
