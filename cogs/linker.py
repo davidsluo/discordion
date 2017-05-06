@@ -1,6 +1,8 @@
+import difflib
+
 from discord.ext import commands
 from discord.ext.commands import Context
-from peewee import CharField
+from peewee import CharField, fn
 from peewee import IntegrityError
 
 from cogs.utils import checks
@@ -34,7 +36,12 @@ class Linker:
             try:
                 link = Link.get((Link.server == ctx.message.server.id) | (Link.server == None), Link.name == name)
             except Link.DoesNotExist:
-                await self.bot.say('Link `{0}` not found.'.format(name), delete_after=30)
+                possibilities = [l.name for l in Link.select()]
+                close = difflib.get_close_matches(name, possibilities=possibilities)
+                if len(close) > 0:
+                    await self.bot.say('Link `{0}` not found. Did you mean:\n{1}'.format(name, '\n'.join(close)))
+                else:
+                    await self.bot.say('Link `{0}` not found.'.format(name))
                 return
 
             await self.bot.say(link.text)
@@ -44,8 +51,7 @@ class Linker:
                 link.name,
                 link.text[:75] + (link.text[75:] and '...')
             ) for link in links])
-            await self.bot.say('Links:')
-            await self.bot.say(message)
+            await self.bot.say('Links:\n{0}'.format(message))
 
     @link.command(
         hidden=True,
