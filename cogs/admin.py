@@ -48,6 +48,9 @@ class Admin:
     @checks.is_owner()
     async def load(self, *, module: str):
         """Loads a module."""
+        if module in self.bot.extensions:
+            await self.bot.say('Module already loaded.')
+            return
         try:
             self.bot.load_extension(module)
         except Exception as e:
@@ -60,6 +63,11 @@ class Admin:
     @checks.is_owner()
     async def unload(self, *, module: str):
         """Unloads a module."""
+
+        lib = self.bot.extensions.get(module)
+        if lib is None:
+            await self.bot.say('No module found named {0}.'.format(module))
+            return
         try:
             self.bot.unload_extension(module)
         except Exception as e:
