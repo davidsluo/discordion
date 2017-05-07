@@ -52,15 +52,22 @@ class Twitter:
 
     @commands.group(
         aliases=['tw'],
-        invoke_without_command=True
+        invoke_without_command=True,
+        pass_context=True
     )
-    async def twitter(self):
+    async def twitter(self, ctx):
         """
         List the Twitter users the bot is currently following.
         """
-        following = ', '.join(['@' + user.screen_name for user in TwitterEcho.select()])
+        following = ', '.join(['@' + user.screen_name for user in TwitterEcho.select().where(
+            (TwitterEcho.server == ctx.message.server.id) | (TwitterEcho.server == None))])
 
-        await self.bot.say('Currently following:\n{0}'.format(following))
+        if len(following) > 0:
+            await self.bot.say('Currently following:\n{0}'.format(following))
+        else:
+            await self.bot.say('Currently following:\n'
+                               'No one! Use `{0}follow <user>` to have that user\'s tweets posted in this channel.'
+                               .format(ctx.prefix))
 
     @twitter.command(
         aliases=['f'],
