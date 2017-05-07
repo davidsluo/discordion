@@ -82,7 +82,7 @@ class Economy:
             await self.bot.say('You cannot give yourself money!')
             return
         if amount <= 0:
-            await self.bot.say('You must give greater than $0.')
+            await self.bot.say('You must {0} greater than $0.'.format(ctx.invoked_with))
             return
         try:
             giver = User.get(User.user_id == ctx.message.author.id)
