@@ -14,6 +14,8 @@ For Soundboard and Cat:
 For Twitter:
 * tweepy v3.5.0
 
+For Misc:
+* lenny v0.1.1
 
 ## Configuration
 

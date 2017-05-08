@@ -1,6 +1,7 @@
 from discord import Message, Forbidden
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
+from lenny import lenny
 
 INVITE_FORMAT = 'https://discordapp.com/oauth2/authorize?client_id={0}&scope=bot&permissions=0'
 
@@ -59,6 +60,11 @@ class Misc:
             return
 
         await self.bot.say('Deleted {0} message(s).'.format(len(deleted)), delete_after=30)
+
+    @commands.command()
+    async def lenny(self):
+        """Get a random lenny face."""
+        await self.bot.say(lenny())
 
 
 def setup(bot):
