@@ -21,7 +21,7 @@ class Misc:
         pass_context=True
     )
     @commands.has_permissions(manage_channels=True)
-    async def clean(self, ctx: Context, commands=False):
+    async def clean(self, ctx: Context, commands=False, indiscriminate=False):
         """
         Clean up chat.
         Deletes all messages from the bot and optionally command calls as well.
@@ -29,13 +29,22 @@ class Misc:
             commands:
                 Optional (Yes/No).
                 Whether to clean up command calls as well.
+                Defaults to no.
+            indiscriminate: 
+                Optional (Yes/No).
+                Whether to delete anything that begins with the command prefix or not.
+                Defaults to no.
         """
 
         def is_bot(message: Message):
             return message.author == ctx.message.server.me
 
         def is_command(message: Message):
-            return (len(message.content) > 1) and (message.content[0] == self.bot.command_prefix)
+            split = message.content.split()
+            command = split[0]
+            return (len(message.content) > 1) and \
+                   (command[0] == self.bot.command_prefix) and \
+                   (command[1:] in self.bot.commands or indiscriminate)
 
         if commands:
             def check(msg):
