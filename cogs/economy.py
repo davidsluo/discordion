@@ -40,6 +40,7 @@ class Economy:
     def __init__(self, bot: Bot):
         self.bot = bot
         self.bot.add_listener(self._create_accounts, 'on_server_join')
+        self.bot.add_listener(self._create_account, 'on_member_join')
 
         User.create_table(fail_silently=True)
 
@@ -50,13 +51,25 @@ class Economy:
             for i in range(0, len(accounts), 100):
                 User.insert_many(accounts[i:i + 100]).execute()
 
+    async def _create_account(self, user: discord.User):
+        with db.atomic():
+            User.insert(user_id=user.id).execute()
+
     @commands.command(
         hidden=True,
         pass_context=True
     )
     @checks.is_owner()
-    async def init(self, ctx: Context):
+    async def init_server(self, ctx: Context):
         await self._create_accounts(ctx.message.author.server)
+        await self.bot.say('\N{OK HAND SIGN}')
+
+    @commands.command(
+        hidden=True
+    )
+    @checks.is_owner()
+    async def init_user(self, user: discord.User):
+        await self._create_account(user)
         await self.bot.say('\N{OK HAND SIGN}')
 
     @commands.command(
@@ -106,7 +119,7 @@ class Economy:
         giver.save()
         recipient.save()
 
-        await self.bot.say('Transferred ${0} from {1} to {2}.'.format(amount, ctx.message.author, who))
+        await self.bot.say('Transferred ${0:.2f} from {1} to {2}.'.format(amount, ctx.message.author, who))
 
 
 def setup(bot):
