@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.ext.commands import Bot, Context
+from discord.ext.commands import Bot, Context, cooldowns, cooldown, BucketType
 from peewee import CharField, ForeignKeyField, DoubleField, Check, TimestampField
 
 from cogs.utils import checks
@@ -120,6 +120,22 @@ class Economy:
         recipient.save()
 
         await self.bot.say('Transferred ${0:.2f} from {1} to {2}.'.format(amount, ctx.message.author, who))
+
+    @commands.command(
+        pass_context=True
+    )
+    @cooldown(rate=1, per=60 * 60 * 12, type=BucketType.user)
+    async def wage(self, ctx: Context):
+        try:
+            user = User.get(User.user_id == ctx.message.author.id)
+        except User.DoesNotExist:
+            await self.bot.say('You do not have an account.')
+            return
+
+        user.balance += 250
+        user.save()
+
+        await self.bot.say('Added $250 to {0}.'.format(ctx.message.author))
 
 
 def setup(bot):
