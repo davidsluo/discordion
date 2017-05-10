@@ -1,13 +1,11 @@
 from typing import List
 
 import discord
-from discord import Member
 from discord.ext import commands
 from discord.ext.commands import Bot, Context, cooldown, BucketType
 from peewee import CharField, DoubleField
 
-from cogs.utils import checks
-from cogs.utils.database import BaseModel, db
+from cogs.utils.database import BaseModel
 from cogs.utils.table import make_table
 
 
@@ -40,52 +38,18 @@ class User(BaseModel):
 #             return 0
 
 
+
 class Economy:
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.bot.add_listener(self._create_accounts, 'on_server_join')
-        self.bot.add_listener(self._create_account, 'on_member_join')
 
         User.create_table(fail_silently=True)
-
-    async def _create_accounts(self, server: discord.Server):
-        """Creates accounts for everyone on the server."""
-        accounts = [{'user_id': member.id} for member in server.members]
-        with db.atomic():
-            for i in range(0, len(accounts), 100):
-                User.insert_many(accounts[i:i + 100]).execute()
-
-    async def _create_account(self, user: discord.User):
-        with db.atomic():
-            User.insert(user_id=user.id).execute()
-
-    @commands.command(
-        hidden=True,
-        pass_context=True
-    )
-    @checks.is_owner()
-    async def init_server(self, ctx: Context):
-        await self._create_accounts(ctx.message.author.server)
-        await self.bot.say('\N{OK HAND SIGN}')
-
-    @commands.command(
-        hidden=True
-    )
-    @checks.is_owner()
-    async def init_user(self, user: discord.User):
-        await self._create_account(user)
-        await self.bot.say('\N{OK HAND SIGN}')
 
     @commands.command(
         pass_context=True
     )
     async def balance(self, ctx: Context):
-        try:
-            user = User.get(User.user_id == ctx.message.author.id)
-        except User.DoesNotExist:
-            # TODO: make sure ctx.message.author resolves to a string.
-            await self.bot.say('Account not found for {0}.'.format(ctx.message.author))
-            return
+        user, _ = User.get_or_create(user_id=ctx.message.author.id)
 
         await self.bot.say('Your balance is ${0:.2f}'.format(user.balance))
 
@@ -130,17 +94,9 @@ class Economy:
         if amount <= 0:
             await self.bot.say('You must {0} greater than $0.'.format(ctx.invoked_with))
             return
-        try:
-            giver = User.get(User.user_id == ctx.message.author.id)
-        except User.DoesNotExist:
-            await self.bot.say('You do not have an account.')
-            return
 
-        try:
-            recipient = User.get(User.user_id == who.id)
-        except User.DoesNotExist:
-            await self.bot.say('Recipient does not have an account.')
-            return
+        giver, _ = User.get_or_create(user_id=ctx.message.author.id)
+        recipient, _ = User.get_or_create(user_id=who.id)
 
         if giver.balance - amount < 0:
             await self.bot.say('Insufficient funds.')
@@ -153,28 +109,20 @@ class Economy:
         recipient.save()
 
         await self.bot.say('Transferred ${0:.2f} from **{1}** to **{2}**.'
-                           .format(amount, ctx.message.author.nick, who.nick))
+                           .format(amount, ctx.message.author.name, who.name))
 
     @commands.command(
         pass_context=True
     )
     @cooldown(rate=1, per=60 * 60 * 12, type=BucketType.user)
     async def wage(self, ctx: Context):
-        try:
-            user = User.get(User.user_id == ctx.message.author.id)
-        except User.DoesNotExist:
-            await self.bot.say('You do not have an account.')
-            return
+        user, _ = User.get_or_create(user_id=ctx.message.author.id)
 
         user.balance += 250
         user.save()
 
-        await self.bot.say('Added $250 to **{0}**.'.format(ctx.message.author.nick))
+        await self.bot.say('Added $250 to **{0}**.'.format(ctx.message.author.name))
 
 
 def setup(bot):
     bot.add_cog(Economy(bot))
-
-
-def teardown(bot):
-    pass

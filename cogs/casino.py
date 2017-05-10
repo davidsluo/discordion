@@ -1,7 +1,7 @@
 import random
+import sys
 from collections import namedtuple
 
-import sys
 from discord.ext import commands
 from discord.ext.commands import Bot, Context
 
@@ -59,11 +59,7 @@ class Casino:
             await self.bot.say('You must bet greater than $0.')
             return
 
-        try:
-            better = User.get(User.user_id == ctx.message.author.id)
-        except User.DoesNotExist:
-            await self.bot.say('You do not have an account!')
-            return
+        better, _ = User.get_or_create(user_id=ctx.message.author.id)
 
         if better.balance < amount:
             await self.bot.say('Insufficient funds.')
@@ -133,7 +129,7 @@ class Casino:
         #         return
         #
         #     try:
-        #         better = User.get(User.user_id == ctx.message.author.id)
+        #         better, _ = User.get_or_create(user_id = ctx.message.author.id)
         #     except User.DoesNotExist:
         #         await self.bot.say('You do not have an account!')
         #         return
