@@ -1,7 +1,10 @@
+import asyncio
 import logging
 
+import discord
 import yaml
-from discord.ext.commands import Bot
+from discord.ext import commands
+from discord.ext.commands import Context, CommandOnCooldown, BucketType
 
 from cogs.utils import database
 from cogs.utils.database import db
@@ -9,13 +12,57 @@ from cogs.utils.database import db
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-with open('config.yml', 'r') as f:
-    config = yaml.load(f)
-    logger.info('Loading config from file.')
 
-bot = Bot(command_prefix="!")
+class Bot(commands.Bot):
+    def __init__(self, command_prefix, config_file, **options):
+        super(Bot, self).__init__(command_prefix, **options)
 
-bot.config = config
+        with open(config_file, 'r') as f:
+            logger.info('Loading config from file.')
+            self.config = yaml.load(f)
+
+    async def send_message(self, destination, *args, **kwargs):
+        # Stolen from `say` for convenience
+        # TODO: remove this if transitioning to library rewrite.
+        extensions = ('delete_after',)
+        params = {
+            k: kwargs.pop(k, None) for k in extensions
+        }
+
+        coro = super(Bot, self).send_message(destination, *args, **kwargs)
+        return super(Bot, self)._augmented_msg(coro, **params)
+
+    async def on_command_error(self, event, ctx: Context):
+        if isinstance(event, CommandOnCooldown):
+            cmd_name = ctx.invoked_with
+            if event.cooldown.type is BucketType.user:
+                cd_type = 'user'
+            elif event.cooldown.type is BucketType.channel:
+                cd_type = 'channel'
+            elif event.cooldown.type is BucketType.server:
+                cd_type = 'server'
+            elif event.cooldown.type is BucketType.default:
+                cd_type = 'global'
+            else:
+                cd_type = ''
+
+            cd_duration = int(event.retry_after)
+
+            mins, secs = divmod(cd_duration, 60)
+            hours, mins = divmod(mins, 60)
+
+            duration_fmt = ('{0} hours '.format(hours) if hours else '',
+                            '{0} minutes '.format(mins) if mins or hours else '',
+                            '{0} seconds'.format(secs))
+
+            await self.send_message(ctx.message.channel,
+                                    'Command {0} on {1} cooldown. Try again in {2}{3}{4}.'
+                                    .format(cmd_name, cd_type, *duration_fmt))
+        else:
+            super(Bot, self).on_command_error(event, ctx)
+
+
+bot = Bot(command_prefix="!", config_file='config.yml')
 
 
 def load():
@@ -23,7 +70,7 @@ def load():
     database.Server.create_table(fail_silently=True)
     logger.info('Connecting to database.')
 
-    extensions = config['extensions']
+    extensions = bot.config['extensions']
 
     for ext in extensions:
         try:
