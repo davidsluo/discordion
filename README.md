@@ -54,6 +54,8 @@ Key:
 |`<>`|Argument is required.|
 |`[]`|Argument is optional.|
 |`x=50`|`x` defaults to 50.|
+|`arg1 arg2 args...`|`args` is variable length. Can be one argument, or two, etc.|
+|`[arg1 [arg2]]`|`arg1` cannot be specified without also specifying `arg2`.|
 
 ### Soundboard
 
