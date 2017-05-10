@@ -21,7 +21,7 @@ class Linker:
         Link.create_table(fail_silently=True)
 
     @commands.group(
-        aliases=['l'],
+        aliases=['links', 'l', 'tag', 'tags', 't'],
         invoke_without_command=True,
         pass_context=True
     )
