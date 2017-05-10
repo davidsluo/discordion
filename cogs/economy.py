@@ -1,10 +1,14 @@
+from typing import List
+
 import discord
+from discord import Member
 from discord.ext import commands
-from discord.ext.commands import Bot, Context, cooldowns, cooldown, BucketType
-from peewee import CharField, ForeignKeyField, DoubleField, Check, TimestampField
+from discord.ext.commands import Bot, Context, cooldown, BucketType
+from peewee import CharField, DoubleField
 
 from cogs.utils import checks
 from cogs.utils.database import BaseModel, db
+from cogs.utils.table import make_table
 
 
 class User(BaseModel):
@@ -86,6 +90,35 @@ class Economy:
         await self.bot.say('Your balance is ${0:.2f}'.format(user.balance))
 
     @commands.command(
+        aliases=['lb']
+    )
+    async def leaderboard(self, page=1):
+        def from_user_id(user_ids: List[str]):
+            for user_id in user_ids:
+                for server in self.bot.servers:
+                    for member in server.members:
+                        if user_id == member.id:
+                            yield member.name
+                            break
+                    else:
+                        continue
+                    break
+
+        users = User.select().order_by(User.balance.desc()).paginate(page, 10)
+
+        members = list(from_user_id([user.user_id for user in users]))
+        balances = ['${0:.2f}'.format(user.balance) for user in users]
+
+        leaderboard = make_table(members, balances)
+
+        message = \
+            'Leaderboard **Page {page}**:\n' \
+            '```\n' \
+            '{leaderboard}\n' \
+            '```'
+        await self.bot.say(message.format(leaderboard=leaderboard, page=page))
+
+    @commands.command(
         pass_context=True,
         aliases=['pay', 'loan']
     )
@@ -119,7 +152,8 @@ class Economy:
         giver.save()
         recipient.save()
 
-        await self.bot.say('Transferred ${0:.2f} from {1} to {2}.'.format(amount, ctx.message.author, who))
+        await self.bot.say('Transferred ${0:.2f} from **{1}** to **{2}**.'
+                           .format(amount, ctx.message.author.nick, who.nick))
 
     @commands.command(
         pass_context=True
@@ -135,7 +169,7 @@ class Economy:
         user.balance += 250
         user.save()
 
-        await self.bot.say('Added $250 to {0}.'.format(ctx.message.author))
+        await self.bot.say('Added $250 to **{0}**.'.format(ctx.message.author.nick))
 
 
 def setup(bot):
