@@ -29,8 +29,7 @@ class Bot(commands.Bot):
             k: kwargs.pop(k, None) for k in extensions
         }
 
-        coro = super(Bot, self).send_message(destination, *args, **kwargs)
-        return super(Bot, self)._augmented_msg(coro, **params)
+        return await super(Bot, self).send_message(destination, *args, **kwargs)
 
     async def on_command_error(self, event, ctx: Context):
         if isinstance(event, CommandOnCooldown):
