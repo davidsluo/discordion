@@ -131,8 +131,14 @@ todo
 ### Casino
 todo
 
+### TL;DR
+todo
+
 ## TODO
 * **Handle global links/sounds with the same name.**
+* Move Twitter cog to rely on webhooks instead of push updates in another thread.
+* requirements.txt
+* Locally generate tl;dr instead of relying on smmry
 * Per user linker?
 * Documentation, in general.
 * Wiki maybe?
@@ -140,5 +146,4 @@ todo
     * Make generalized aiohttp requests module?
 * Auto-generate example config.
     * Prompt for values?
-* Move Twitter cog to rely on webhooks instead of push updates in another thread.
-* requirements.txt
+* plug.dj echoing?
