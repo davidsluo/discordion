@@ -1,7 +1,5 @@
-import asyncio
 import logging
 
-import discord
 import yaml
 from discord.ext import commands
 from discord.ext.commands import Context, CommandOnCooldown, BucketType
@@ -61,7 +59,7 @@ class Bot(commands.Bot):
             super(Bot, self).on_command_error(event, ctx)
 
 
-bot = Bot(command_prefix="!", config_file='config.yml')
+bot = Bot(command_prefix='!', config_file='config.yml')
 
 
 def load():

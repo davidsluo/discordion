@@ -1,9 +1,10 @@
 from discord.ext import commands
 
-import bot
+from bot import bot
 
 
 # Checks
+
 def owner_check(ctx):
     return ctx.message.author.id == str(bot.config['discord']['owner'])
 
