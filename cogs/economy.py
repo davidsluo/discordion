@@ -1,3 +1,4 @@
+import locale
 from typing import List
 
 import discord
@@ -51,7 +52,7 @@ class Economy:
     async def balance(self, ctx: Context):
         user, _ = User.get_or_create(user_id=ctx.message.author.id)
 
-        await self.bot.say('Your balance is ${0:.2f}'.format(user.balance))
+        await self.bot.say('Your balance is ${0:,.2f}'.format(user.balance))
 
     @commands.command(
         aliases=['lb']
@@ -71,7 +72,7 @@ class Economy:
         users = User.select().order_by(User.balance.desc()).paginate(page, 10)
 
         members = list(from_user_id([user.user_id for user in users]))
-        balances = ['${0:.2f}'.format(user.balance) for user in users]
+        balances = ['${0:,.2f}'.format(user.balance) for user in users]
 
         leaderboard = make_table(members, balances)
 
@@ -108,7 +109,7 @@ class Economy:
         giver.save()
         recipient.save()
 
-        await self.bot.say('Transferred ${0:.2f} from **{1}** to **{2}**.'
+        await self.bot.say('Transferred ${0:,.2f} from **{1}** to **{2}**.'
                            .format(amount, ctx.message.author.name, who.name))
 
     @commands.command(
