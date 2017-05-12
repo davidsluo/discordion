@@ -41,11 +41,11 @@ class Casino:
     weights = tuple(r.weight for r in reel)
 
     reward_message = \
-        '**{0}** bet **${1:.2f}** and won **${2:.2f}**.\n'
+        '**{0}** bet **${1:,.2f}** and won **${2:,.2f}**.\n'
     reward_info = \
-        '{0} x{1}: **${2:.2f}**'
+        '{0} x{1}: **${2:,.2f}**'
     lost_message = \
-        '**{0}** bet **${1:.2f}** and lost all of it.'
+        '**{0}** bet **${1:,.2f}** and lost all of it.'
 
     def __init__(self, bot: Bot):
         self.bot = bot
