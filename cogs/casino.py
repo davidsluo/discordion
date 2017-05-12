@@ -3,7 +3,7 @@ import sys
 from collections import namedtuple
 
 from discord.ext import commands
-from discord.ext.commands import Bot, Context
+from discord.ext.commands import Bot, Context, cooldown, BucketType
 
 from cogs.economy import User
 
@@ -54,6 +54,7 @@ class Casino:
         aliases=['slot'],
         pass_context=True
     )
+    @cooldown(rate=1, per=2, type=BucketType.user)
     async def slots(self, ctx: Context, amount: float = 1):
         if amount <= 0:
             await self.bot.say('You must bet greater than $0.')
