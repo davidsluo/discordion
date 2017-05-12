@@ -69,6 +69,11 @@ class Misc:
         """Get a random lenny face."""
         await self.bot.say(lenny())
 
+    @commands.command()
+    async def source(self):
+        """Get the source code for this bot."""
+        await self.bot.say('https://github.com/davidsluo/discordion')
+
 
 def setup(bot):
     bot.add_cog(Misc(bot))
