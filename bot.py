@@ -43,14 +43,14 @@ class Bot(commands.Bot):
             else:
                 cd_type = ''
 
-            cd_duration = int(event.retry_after)
+            cd_duration = event.retry_after
 
             mins, secs = divmod(cd_duration, 60)
             hours, mins = divmod(mins, 60)
 
             duration_fmt = ('{0} hours '.format(hours) if hours else '',
                             '{0} minutes '.format(mins) if mins or hours else '',
-                            '{0} seconds'.format(secs))
+                            '{0:.2f} seconds'.format(secs))
 
             await self.send_message(ctx.message.channel,
                                     'Command {0} on {1} cooldown. Try again in {2}{3}{4}.'
