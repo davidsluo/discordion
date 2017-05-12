@@ -47,7 +47,8 @@ class Economy:
         User.create_table(fail_silently=True)
 
     @commands.command(
-        pass_context=True
+        pass_context=True,
+        aliases=['bal']
     )
     async def balance(self, ctx: Context):
         user, _ = User.get_or_create(user_id=ctx.message.author.id)
