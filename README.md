@@ -147,3 +147,4 @@ todo
 * Auto-generate example config.
     * Prompt for values?
 * plug.dj echoing?
+* playback speed control on soundboard
