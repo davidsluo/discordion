@@ -36,6 +36,7 @@ class Soundboard:
 
         self.play_sound = asyncio.Event()
         self.sound_file = None
+        self.speed = None
         self.volume = None
         self.voice = None
 
@@ -70,7 +71,8 @@ class Soundboard:
     async def soundboard_task(self):
         while True:
             await self.play_sound.wait()
-            player = self.voice.create_ffmpeg_player(Soundboard.save_path + '/' + self.sound_file)
+            player = self.voice.create_ffmpeg_player(Soundboard.save_path + '/' + self.sound_file, options = '-filter:a "atempo={0}"'.format(self.speed))
+            # player = self.voice.create_ffmpeg_player(Soundboard.save_path + '/' + self.sound_file)
             player.volume = self.volume / 100
             player.start()
             player.join()
@@ -82,7 +84,7 @@ class Soundboard:
         pass_context=True,
         invoke_without_command=True
     )
-    async def soundboard(self, ctx: Context, name: str = None, volume: int = None):
+    async def soundboard(self, ctx: Context, name: str = None, volume: int = None, speed: int = 100):
         """
         Play a sound from the soundboard. 
         Run this command with no arguments to list all available sounds.
@@ -93,6 +95,10 @@ class Soundboard:
             volume: 
                 Optional. 
                 The volume (0 to 100) to play the sound.
+            speed:
+                Optional.
+                The speed (50 to 200) to play the sound.
+                Defaults to 100.
         """
         # Play `name`
         if name:
@@ -118,6 +124,11 @@ class Soundboard:
                 volume = 0 if volume < 0 else volume
             else:
                 volume = sound.volume
+            
+            if speed < 50:
+                speed = 50
+            if speed > 200:
+                speed = 200
 
             channel = ctx.message.author.voice_channel
             if channel is None:
@@ -132,6 +143,7 @@ class Soundboard:
 
             self.sound_file = sound.filename
             self.volume = volume
+            self.speed = speed / 100.0
             self.play_sound.set()
         # List all sounds.
         else:
