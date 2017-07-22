@@ -75,7 +75,7 @@ def kill_existing():
         os.remove(pidfile)
         # Does this work?
         # sys.exit(0)
-        asyncio.call_soon(lambda: bot.loop.create_task(bot.logout()), loop=bot.loop)
+        bot.loop.call_soon(lambda: bot.loop.create_task(bot.logout()), loop=bot.loop)
 
     signal.signal(signal.SIGINT, handle_exit)
 
