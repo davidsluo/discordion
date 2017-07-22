@@ -1,5 +1,10 @@
 import logging
+import os
+import signal
 
+import sys
+
+import asyncio
 import yaml
 from discord.ext import commands
 from discord.ext.commands import Context, CommandOnCooldown, BucketType
@@ -62,6 +67,41 @@ class Bot(commands.Bot):
 bot = Bot(command_prefix='!', config_file='config.yml')
 
 
+def kill_existing():
+    pidfile = '/tmp/discordion.pid'
+    pid = os.getpid()
+
+    def handle_exit(signal, stack):
+        os.remove(pidfile)
+        # Does this work?
+        # sys.exit(0)
+        asyncio.call_soon(lambda: bot.loop.create_task(bot.logout()), loop=bot.loop)
+
+    signal.signal(signal.SIGINT, handle_exit)
+
+    if not os.path.isfile(pidfile):
+        with open(pidfile, 'w') as f:
+            f.write(str(pid))
+    else:
+        with open(pidfile, 'r') as f:
+            pid_other = int(f.read())
+
+        try:
+            os.kill(pid_other, 0)
+            os.kill(pid_other, signal.SIGINT)
+        except OSError:
+            os.remove(pidfile)
+
+        while True:
+            try:
+                os.kill(pid_other, 0)
+            except OSError:
+                break
+
+        with open(pidfile, 'w') as f:
+            f.write(str(pid))
+
+
 def load():
     db.connect()
     database.Server.create_table(fail_silently=True)
@@ -83,5 +123,8 @@ def run():
 
 
 if __name__ == '__main__':
+    # because developing for windows is hard.
+    if os.name != 'nt':
+        kill_existing()
     load()
     run()
