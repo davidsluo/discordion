@@ -1,4 +1,4 @@
-#!/usr/bin/git-shell
+#!/usr/bin/env bash
 GIT_WORK_TREE=$HOME/discordion
 GIT_DIR=$HOME/discordion/discordion.git
 git checkout -f
