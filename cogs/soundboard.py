@@ -22,7 +22,7 @@ class Sound(PerServerModel):
 
 
 class Soundboard:
-    save_path = os.getcwd() + os.path.abspath('/sounds')
+    save_path = os.getcwd() + '/sounds'
 
     def __init__(self, bot: Bot):
         self.bot = bot
