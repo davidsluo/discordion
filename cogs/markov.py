@@ -58,4 +58,5 @@ class Markov:
             if char != ' ':
                 word += char
             else:
-                return word
+                await self.bot.say(word)
+                return
