@@ -4,17 +4,21 @@
 ## Requirements
 
 For base bot:
+
 * discord.py[voice] v0.16.7
 * peewee v2.9.2
 * PyYAML v3.12
 
 For Soundboard and Cat:
+
 * requests v2.13.0
 
 For Twitter:
+
 * tweepy v3.5.0
 
 For Misc:
+
 * lenny v0.1.1
 
 ## Configuration
@@ -96,7 +100,6 @@ Allows users to store text in a database to be retrieved later.
 |`!link all <command>`|-|Retrieve a link from all links on all servers.|Requires user to be bot owner.|
 |`!link globalize <name>`|-|Makes `name` a global link (accessible to all servers).|Requires user to be bot owner.|
 
-
 ### RNG
 
 Generates random numbers.
@@ -117,24 +120,31 @@ Get a random cat.
 |`!cat`|-|Get a random cat.|-|
 
 ### Twitter
+
 todo
 
 ### Misc
+
 todo
 
 ### xkcd
+
 todo
 
 ### Economy
+
 todo
 
 ### Casino
+
 todo
 
 ### TL;DR
+
 todo
 
 ## TODO
+
 * **Handle global links/sounds with the same name.**
 * Move Twitter cog to rely on webhooks instead of push updates in another thread.
 * requirements.txt
@@ -143,8 +153,8 @@ todo
 * Documentation, in general.
 * Wiki maybe?
 * Move dependency on requests to aiohttp.
-    * Make generalized aiohttp requests module?
+  * Make generalized aiohttp requests module?
 * Auto-generate example config.
-    * Prompt for values?
+  * Prompt for values?
 * plug.dj echoing?
 * playback speed control on soundboard
